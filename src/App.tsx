@@ -30,6 +30,11 @@ function App() {
     setIsFooterCollapsed(isVisualizePage)
   }, [location.pathname, isVisualizePage])
 
+  // Set default quote based on page: Ted Chiang for visualize, Brian Wilson for home
+  useEffect(() => {
+    setQuoteIndex(isVisualizePage ? 1 : 0)
+  }, [isVisualizePage])
+
   const toggleQuote = () => {
     setQuoteIndex((prev) => (prev + 1) % QUOTES.length)
   }
