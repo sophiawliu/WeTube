@@ -687,6 +687,13 @@ body {
   display: block;
 }
 
+.floating-video-iframe.collapsed {
+  height: 0;
+  width: 0;
+  position: absolute;
+  visibility: hidden;
+}
+
 .video-header-info {
   flex: 1;
   min-width: 0;

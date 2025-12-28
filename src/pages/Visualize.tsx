@@ -344,16 +344,14 @@ function Visualize() {
                     </button>
                   </div>
                 </div>
-                {!isCollapsed && (
-                  <iframe
-                    className="floating-video-iframe"
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                    title={video.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                )}
+                <iframe
+                  className={`floating-video-iframe ${isCollapsed ? 'collapsed' : ''}`}
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                  title={video.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
             )}
           </header>
