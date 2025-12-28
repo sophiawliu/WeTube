@@ -91,3 +91,4 @@ export function processComments(comments: { text: string }[]): WordFrequency[] {
   return frequencies
 }
 
+
