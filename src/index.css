@@ -69,7 +69,7 @@ body {
 }
 
 .search-box.has-dropdown {
-  border-radius: 24px 24px 0 0;
+  border-radius: 24px;
   box-shadow: 0 4px 6px rgba(32, 33, 36, 0.15);
 }
 
@@ -133,7 +133,8 @@ body {
 
 .search-dropdown {
   border-top: 1px solid #e8eaed;
-  padding: 8px 0;
+  padding: 8px 0 16px 0;
+  overflow: hidden;
 }
 
 .search-loading,
@@ -716,68 +717,25 @@ body {
   padding: 24px;
 }
 
-/* Loading Spinner */
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  position: relative;
-  animation: spin 1s linear infinite;
+/* Loading Text Wave Animation */
+.loading-text-wave {
+  font-size: 18px;
+  font-weight: 500;
+  background: linear-gradient(90deg, #5ABED7, #A4D5C5, #5ABED7, #ffffff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textWave 2s linear infinite;
 }
 
-.loading-spinner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 4px solid transparent;
-  border-top-color: #5ABED7;
-  border-right-color: rgba(90, 190, 215, 0.7);
-}
-
-.loading-spinner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 4px solid transparent;
-  border-top-color: #A4D5C5;
-  opacity: 0.4;
-  animation: spin 2s linear infinite reverse;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Fading tail effect */
-.loading-spinner-wrapper {
-  position: relative;
-  width: 48px;
-  height: 48px;
-}
-
-.loading-spinner-wrapper::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    transparent 30deg,
-    rgba(90, 190, 215, 0.1) 60deg,
-    rgba(90, 190, 215, 0.3) 120deg,
-    rgba(164, 213, 197, 0.5) 180deg,
-    #5ABED7 240deg,
-    #5ABED7 300deg,
-    rgba(90, 190, 215, 0.8) 330deg,
-    transparent 360deg
-  );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #fff calc(100% - 4px));
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #fff calc(100% - 4px));
-  animation: spin 1.2s linear infinite;
+@keyframes textWave {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Meaning Dial - Fidelity Spectrum */

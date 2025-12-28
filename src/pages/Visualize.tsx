@@ -87,6 +87,13 @@ function Visualize() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialLevel, isLoading])
 
+  // Reset page title on unmount
+  useEffect(() => {
+    return () => {
+      document.title = 'WeTube'
+    }
+  }, [])
+
   // Search effect
   useEffect(() => {
     if (!query.trim()) {
@@ -128,13 +135,14 @@ function Visualize() {
           return
         }
         setVideo(videoData)
+        document.title = `${videoData.title} - WeTube`
 
         // 2. Fetch comments
         setLoadingStage('fetching-comments')
         const maxComments = Math.min(videoData.commentCountRaw, 200)
         const rawComments = await fetchComments(videoId!, API_KEY, maxComments)
         if (rawComments.length === 0) {
-          setError('No comments found for this video')
+          setError('Comments are disabled or not accessible for this video. Try a different song!')
           return
         }
 
@@ -353,8 +361,7 @@ function Visualize() {
 
         {isLoading ? (
           <div className="visualize-loading">
-            <div className="loading-spinner-wrapper" />
-            <p>{STAGE_MESSAGES[loadingStage]}</p>
+            <p className="loading-text-wave">{STAGE_MESSAGES[loadingStage]}</p>
           </div>
         ) : (
           <main className="meaning-layers">

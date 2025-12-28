@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import logo from '../assets/wetube-logo.png'
 import searchIcon from '../assets/magglass.png'
 import { searchVideos, VideoDetails } from '../utils/youtube'
+import { getRandomPresetSong } from '../config/presetSongs'
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || ''
 
@@ -54,9 +55,8 @@ function Home() {
   }
 
   const handleLucky = () => {
-    if (videos.length > 0) {
-      navigate(`/visualize/${videos[0].id}`)
-    }
+    const randomVideoId = getRandomPresetSong()
+    navigate(`/visualize/${randomVideoId}`)
   }
 
   return (

@@ -4,6 +4,7 @@ export interface VideoDetails {
   channelTitle: string
   thumbnail: string
   viewCount: string
+  viewCountRaw: number
   commentCount: string
   commentCountRaw: number
   publishedAt: string
@@ -68,8 +69,9 @@ function formatTimeAgo(dateString: string): string {
 export async function searchVideos(query: string, apiKey: string, maxResults: number = 3): Promise<VideoDetails[]> {
   if (!query.trim()) return []
 
-  // First, search for videos
-  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${apiKey}`
+  // Search for more videos than needed to account for filtering
+  const searchCount = maxResults * 3
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${searchCount}&q=${encodeURIComponent(query)}&key=${apiKey}`
 
   try {
     const searchResponse = await fetch(searchUrl)
@@ -91,7 +93,7 @@ export async function searchVideos(query: string, apiKey: string, maxResults: nu
       return []
     }
 
-    return detailsData.items.map((item: {
+    const allVideos: VideoDetails[] = detailsData.items.map((item: {
       id: string
       snippet: {
         title: string
@@ -109,11 +111,25 @@ export async function searchVideos(query: string, apiKey: string, maxResults: nu
       channelTitle: item.snippet.channelTitle,
       thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
       viewCount: formatCount(item.statistics.viewCount || '0', 'views'),
+      viewCountRaw: parseInt(item.statistics.viewCount || '0', 10),
       commentCount: formatCount(item.statistics.commentCount || '0', 'comments'),
       commentCountRaw: parseInt(item.statistics.commentCount || '0', 10),
       publishedAt: item.snippet.publishedAt,
       timeAgo: formatTimeAgo(item.snippet.publishedAt)
     }))
+
+    // Filter to only videos with accessible comments
+    const accessibleVideos: VideoDetails[] = []
+    for (const video of allVideos) {
+      if (accessibleVideos.length >= maxResults) break
+      const accessible = await areCommentsAccessible(video.id, apiKey)
+      if (accessible) {
+        accessibleVideos.push(video)
+      }
+    }
+
+    // Sort by view count (most views first)
+    return accessibleVideos.sort((a, b) => b.viewCountRaw - a.viewCountRaw)
   } catch (error) {
     console.error('Failed to search videos:', error)
     return []
@@ -141,6 +157,7 @@ export async function fetchVideoById(videoId: string, apiKey: string): Promise<V
       channelTitle: item.snippet.channelTitle,
       thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
       viewCount: formatCount(item.statistics.viewCount || '0', 'views'),
+      viewCountRaw: parseInt(item.statistics.viewCount || '0', 10),
       commentCount: formatCount(item.statistics.commentCount || '0', 'comments'),
       commentCountRaw: parseInt(item.statistics.commentCount || '0', 10),
       publishedAt: item.snippet.publishedAt,
@@ -159,6 +176,26 @@ export interface Comment {
   authorProfileImageUrl: string
   likeCount: number
   publishedAt: string
+}
+
+/**
+ * Check if comments are accessible for a video
+ */
+export async function areCommentsAccessible(videoId: string, apiKey: string): Promise<boolean> {
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=id&videoId=${videoId}&maxResults=1&key=${apiKey}`
+    const response = await fetch(url)
+    const data = await response.json()
+    
+    // If there's an error (like 403 for disabled comments), return false
+    if (data.error) {
+      return false
+    }
+    
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**
