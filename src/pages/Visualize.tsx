@@ -25,12 +25,12 @@ type LoadingStage =
   | 'done'
 
 const STAGE_MESSAGES: Record<LoadingStage, string> = {
-  'fetching-video': 'Loading video info...',
-  'fetching-comments': 'Fetching comments...',
-  'embedding': '\"Understanding\" comments... (greppin\')',
+  'fetching-video': 'Loading video info... (greppin\')',
+  'fetching-comments': 'Fetching comments... (greppin\')',
+  'embedding': '\"Understanding\" comments... (grokkin\')',
   'clustering': 'Finding patterns... (grokkin\')',
   'naming': 'Naming the feelings... (grokkin\')',
-  'claims': 'Summarizing... (greppin\' and grokkin\')',
+  'claims': 'Summarizing... (vibin\')',
   'done': ''
 }
 
