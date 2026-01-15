@@ -1,11 +1,4 @@
-import OpenAI from 'openai'
-
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || ''
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true // Required for client-side usage
-})
+// API calls are proxied through serverless functions to keep the key secure
 
 export interface CommentWithEmbedding {
   id: string
@@ -80,12 +73,24 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
     
     while (retries > 0 && !success) {
       try {
-        const response = await openai.embeddings.create({
-          model: 'text-embedding-3-small',
-          input: batch,
+        const response = await fetch('/api/embeddings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: batch }),
         })
 
-        const embeddings = response.data.map(item => item.embedding)
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.log('Rate limited, waiting 2 seconds...')
+            await delay(2000)
+            retries--
+            continue
+          }
+          throw new Error('Embedding request failed')
+        }
+
+        const data = await response.json()
+        const embeddings = data.data.map((item: { embedding: number[] }) => item.embedding)
         validEmbeddings.push(...embeddings)
         success = true
         
@@ -94,19 +99,11 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
           await delay(200)
         }
       } catch (error: unknown) {
-        const err = error as { status?: number; message?: string }
+        const err = error as { message?: string }
         console.error('Embedding error:', err.message || error)
-        
-        if (err.status === 429) {
-          // Rate limited - wait longer and retry
-          console.log('Rate limited, waiting 2 seconds...')
-          await delay(2000)
-          retries--
-        } else {
-          // Other error - add empty embeddings for this batch
-          validEmbeddings.push(...batch.map(() => []))
-          success = true
-        }
+        // Other error - add empty embeddings for this batch
+        validEmbeddings.push(...batch.map(() => []))
+        success = true
       }
     }
     

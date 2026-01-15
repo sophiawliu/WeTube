@@ -1,11 +1,4 @@
-import OpenAI from 'openai'
-
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || ''
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-})
+// API calls are proxied through serverless functions to keep the key secure
 
 export interface ClusterName {
   clusterId: number
@@ -34,12 +27,15 @@ export async function generateClusterNames(
   ).join('\n\n')
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You name clusters of YouTube comments about music videos. 
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You name clusters of YouTube comments about music videos. 
           
 Your names should be:
 - Evocative and poetic, like "late-night solitude" or "childhood safety" or "post-breakup spiral"
@@ -49,17 +45,23 @@ Your names should be:
 
 Respond with JSON array: [{"clusterId": number, "name": "string", "confidence": 0.0-1.0}]
 Confidence reflects how coherent the cluster feels (1.0 = very tight theme, 0.5 = mixed).`
-        },
-        {
-          role: 'user',
-          content: `Name these comment clusters:\n\n${clusterDescriptions}`
-        }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7
+          },
+          {
+            role: 'user',
+            content: `Name these comment clusters:\n\n${clusterDescriptions}`
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.7
+      }),
     })
 
-    const content = response.choices[0]?.message?.content
+    if (!response.ok) {
+      throw new Error('Chat request failed')
+    }
+
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content
     if (!content) return clusters.map(c => ({ clusterId: c.id, name: 'unnamed feeling', confidence: 0.5 }))
 
     const parsed = JSON.parse(content)
@@ -96,12 +98,15 @@ export async function generateClaims(
   ).join('\n\n')
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You write prose summaries of how people respond to music. Your writing must be:
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You write prose summaries of how people respond to music. Your writing must be:
 
 1. ACCOUNTABLE: Every claim cites a count, e.g. "Many listeners describe... (132 comments)"
 2. HUMBLE: Use hedging language - "seem to", "many describe", "a smaller group"
@@ -112,17 +117,23 @@ Structure: 2-4 sentences covering major themes, then minority perspectives.
 End with a reflection that this is "one way of speaking about many experiences."
 
 Respond with JSON: {"claims": [{"text": "...", "clusterIds": [0, 1], "commentCount": 150}]}`
-        },
-        {
-          role: 'user',
-          content: `Summarize these ${totalComments} comments across ${clusters.length} clusters:\n\n${clusterSummary}`
-        }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.6
+          },
+          {
+            role: 'user',
+            content: `Summarize these ${totalComments} comments across ${clusters.length} clusters:\n\n${clusterSummary}`
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.6
+      }),
     })
 
-    const content = response.choices[0]?.message?.content
+    if (!response.ok) {
+      throw new Error('Chat request failed')
+    }
+
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content
     if (!content) {
       return [{
         id: 0,
